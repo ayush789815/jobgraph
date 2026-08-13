@@ -36,16 +36,23 @@ export default function AppLayout() {
   const [searchText, setSearchText] = useState('');
   const debouncedSearch = useDebouncedValue(searchText, 400);
   const navigate = useNavigate();
-  const isFirstRun = useRef(true);
+  const prevSearch = useRef(debouncedSearch);
 
-  // Debounced global search. replace:true keeps history clean; the Jobs page
-  // debounces its own fetch, so this doesn't fire an API call per keystroke.
+  // Debounced global search. Navigate only when the query *changes* — never on
+  // mount (React StrictMode double-invokes effects in dev, which would
+  // otherwise bounce every route to /jobs on first load). replace:true keeps
+  // history clean; the Jobs page debounces its own fetch, so this doesn't fire
+  // an API call per keystroke.
   useEffect(() => {
-    if (isFirstRun.current) {
-      isFirstRun.current = false;
-      return;
+    const previous = prevSearch.current;
+    prevSearch.current = debouncedSearch;
+    if (previous === debouncedSearch) return; // mount / no change
+    if (debouncedSearch) {
+      navigate(`/jobs?q=${encodeURIComponent(debouncedSearch)}`, { replace: true });
+    } else if (previous) {
+      // Search was cleared after having been active — drop the query param.
+      navigate('/jobs', { replace: true });
     }
-    navigate(debouncedSearch ? `/jobs?q=${encodeURIComponent(debouncedSearch)}` : '/jobs', { replace: true });
   }, [debouncedSearch, navigate]);
 
   const sidebar = (

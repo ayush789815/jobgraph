@@ -8,20 +8,23 @@ This runbook deploys the backend to **Render** and the frontend to **Vercel**, b
 
 ## 0. Push the repo to GitHub
 
-The repo isn't committed yet (a platform outage blocked the automated commit). Run these in the project folder:
+The project is already committed (see `git log`). Create an empty repo at github.com/new named `jobgraph`, then:
 
 ```bash
 cd "/Users/veramasa/Desktop/job explorer"
-git init
-git add -A
-git commit -m "JobGraph: graph-powered job explorer (React + Express + CognoDB)"
-# create an empty repo at github.com/new named jobgraph, then:
 git branch -M main
 git remote add origin https://github.com/<your-username>/jobgraph.git
 git push -u origin main
 ```
 
-> `.gitignore` already excludes `node_modules/`, `.env`, and `dist/`, so secrets never reach GitHub.
+If you have uncommitted changes (e.g. README screenshots), commit them first:
+
+```bash
+git add -A
+git commit -m "Add README screenshots and polish"
+```
+
+> `.gitignore` already excludes `node_modules/`, `.env`, `.env.local`, `dist/`, and `.freebuff/`, so secrets and worktree scratch files never reach GitHub.
 
 ## 1. Backend → Render (free)
 

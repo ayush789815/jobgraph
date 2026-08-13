@@ -19,7 +19,7 @@ const PROP_LABELS = {
   website: 'Website',
 };
 
-export default function NodePanel({ node, connections, onClose }) {
+export default function NodePanel({ node, connections, nodes, onClose }) {
   if (!node) return null;
   const type = NODE_TYPES[node.type] || NODE_TYPES.Job;
   const props = node.props || {};
@@ -75,7 +75,8 @@ export default function NodePanel({ node, connections, onClose }) {
             <ul className="space-y-1.5">
               {related.map((l) => {
                 const other = l.source === node.id ? l.target : l.source;
-                const otherNode = connections.find((n) => n.id === other);
+                // `connections` holds links; neighbor nodes live in `nodes`.
+                const otherNode = nodes.find((n) => n.id === other);
                 if (!otherNode) return null;
                 return (
                   <li key={`${l.source}-${l.target}-${l.relationship}`} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5">

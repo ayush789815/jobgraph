@@ -293,7 +293,16 @@ All ids are validated with a strict allow-listed pattern; filters are whiteliste
 
 ## Screenshots
 
-> Screenshots go in this section (and can live in a `screenshots/` folder). Recommended: dashboard, job explorer with filters, job details with related jobs, skill details with companies-hiring, job match results, and the Graph Explorer.
+> All captures below show the app running against a live CognoDB instance (`npm run seed` first).
+
+| | |
+|---|---|
+| **Dashboard** — stats, popular skills & technologies, recent jobs | **Job Explorer** — full-text search, filters, sort, match badges |
+| ![Dashboard](screenshots/dashboard.png) | ![Job Explorer](screenshots/job-explorer.png) |
+| **Skill Explorer** — skills with open-job counts | **Company Explorer** — companies with open-job counts |
+| ![Skill Explorer](screenshots/skills.png) | ![Company Explorer](screenshots/companies.png) |
+| **Job Match** — pick your skills, see the match math | **Graph Explorer** — live neighborhood of any node (up to 2 hops) |
+| ![Job Match](screenshots/job-match.png) | ![Graph Explorer](screenshots/graph-explorer.png) |
 
 ## Known limitations & future work
 
@@ -312,6 +321,17 @@ Be ready to explain:
 - **How parameterization prevents injection?** `session.run(cypher, params)` binds `$name` placeholders server-side; user input never becomes part of the query text. The only dynamic Cypher is assembled from fixed allow-listed fragments with all values in `params`.
 - **How a request flows?** React page → axios (`/api` proxy in dev, `VITE_API_URL` in prod) → Express route → middleware validation → controller → service → `runQuery` → session on the CognoDB driver → records mapped to JSON via `toPlain()` → back through the same path. Timeouts and 5xx are normalized into friendly messages by the axios interceptor.
 - **Why MERGE for the seed?** Uniqueness constraints on `id` + `MERGE` = idempotent re-runs; `--reset` offers a clean slate when you want to change the dataset.
+
+---
+
+## Submission checklist
+
+- [x] **Seed the database** — done (`88 jobs`, `46 skills`, `18 companies`; re-run anytime with `npm run seed`, it's `MERGE`-based).
+- [x] **Refresh the screenshots** — re-captured the six pages in `screenshots/` against live data.
+- [ ] **Deploy** — follow `DEPLOYMENT.md` (Render for the API, Vercel for the client) and drop the live URLs into the README if you want them visible.
+- [ ] **Record a short screen demo** — ~1 minute: dashboard → job search with filters → job details with related jobs → job match → graph explorer. macOS: `Shift+Cmd+5` or QuickTime.
+- [ ] **Push to GitHub** — `git add -A && git commit -m "JobGraph: graph-powered job explorer (React + Express + CognoDB)"` then `git push -u origin main`. Keep the repo private and share access, or make it public.
+- [ ] **Submit** — email the repo URL (and demo link) to **hr@wexa.ai** with subject `CognoDB Assignment 2 – <Your Name>`. Keep the CognoDB instance running until you hear back.
 
 ---
 
