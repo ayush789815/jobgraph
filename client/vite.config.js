@@ -10,7 +10,9 @@ export default defineConfig({
     // (e.g. Vercel) and VITE_API_URL points at the deployed API.
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        // Overridable so a second API instance (e.g. a Freebuff worktree
+        // preview on another port) can back the dev server.
+        target: process.env.API_PROXY_TARGET || 'http://localhost:4000',
         changeOrigin: true,
       },
     },

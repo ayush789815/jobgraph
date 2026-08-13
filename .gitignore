@@ -27,3 +27,6 @@ Thumbs.db
 # Misc
 coverage/
 *.tsbuildinfo
+
+# Freebuff worktree scratch (run docs, preview scripts, launchd plists)
+.freebuff/

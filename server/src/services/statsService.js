@@ -15,9 +15,17 @@ export async function getDashboardStats() {
   ]);
 
   const counts = { jobs: 0, companies: 0, skills: 0, technologies: 0, locations: 0, industries: 0 };
+  const labelToKey = {
+    Job: 'jobs',
+    Company: 'companies',
+    Skill: 'skills',
+    Technology: 'technologies',
+    Location: 'locations',
+    Industry: 'industries',
+  };
   for (const r of countRecords) {
-    const type = toPlain(r.get('type'));
-    if (type in counts) counts[type] = toPlain(r.get('count'));
+    const key = labelToKey[toPlain(r.get('type'))];
+    if (key) counts[key] = toPlain(r.get('count'));
   }
 
   return {

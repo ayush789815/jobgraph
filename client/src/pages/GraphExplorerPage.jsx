@@ -52,7 +52,9 @@ export default function GraphExplorerPage() {
     for (const t of TABS) params.delete(t.key);
     params.set(type, id);
     setSearchParams(params, { replace: false });
-    setSelectedNodeId(id);
+    // Graph node ids are prefixed with the node type ("Job:job-042"), so store
+    // the full key — otherwise the selection ring and panel lookup miss.
+    setSelectedNodeId(`${type.charAt(0).toUpperCase()}${type.slice(1)}:${id}`);
     setPickerQuery('');
     setGraphKey((k) => k + 1);
   }
@@ -174,7 +176,7 @@ export default function GraphExplorerPage() {
           </div>
 
           <div>
-            <NodePanel node={selectedNode} connections={graph.links} onClose={() => setSelectedNodeId(null)} />
+            <NodePanel node={selectedNode} connections={graph.links} nodes={graph.nodes} onClose={() => setSelectedNodeId(null)} />
             <div className="card mt-4 p-4 text-xs leading-relaxed text-slate-500">
               <p className="mb-1 font-bold text-slate-700">Why this is a graph query</p>
               <p>
