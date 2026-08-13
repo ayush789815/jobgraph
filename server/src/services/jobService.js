@@ -57,8 +57,10 @@ function mapJobRow(record, { withDescription }) {
   const j = toPlain(record.get('j'));
   const c = toPlain(record.get('c'));
   const core = mapJobCore(j, c, record.get('l'));
-  const skills = (record.get('skills') || []).map((n) => toPlain(n));
-  const technologies = (record.get('technologies') || []).map((n) => toPlain(n));
+  // Some queries (MATCH_JOBS) intentionally omit skill/technology columns;
+  // the driver throws on record.get of a missing key, so guard with has().
+  const skills = (record.has('skills') ? record.get('skills') : []).map((n) => toPlain(n));
+  const technologies = (record.has('technologies') ? record.get('technologies') : []).map((n) => toPlain(n));
   const industry = record.has('i') ? toPlain(record.get('i')) : null;
 
   return {
