@@ -11,8 +11,11 @@ export async function getJob(req, res) {
   res.json(job);
 }
 
+const MAX_RELATED_LIMIT = 50;
+
 export async function getRelatedJobs(req, res) {
-  const limit = Number(req.query.limit) || 10;
+  const requested = Math.trunc(Number(req.query.limit));
+  const limit = Number.isFinite(requested) && requested > 0 ? Math.min(requested, MAX_RELATED_LIMIT) : 10;
   const related = await jobService.getRelatedJobs(req.params.id, limit);
   res.json(related);
 }
