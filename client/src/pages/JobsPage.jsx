@@ -11,6 +11,7 @@ import Chip from '../components/Chip.jsx';
 import JobCard from '../components/JobCard.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import InlineError from '../components/InlineError.jsx';
 import { GridSkeleton } from '../components/Skeleton.jsx';
 
 const PAGE_SIZE = 30;
@@ -28,8 +29,8 @@ export default function JobsPage() {
   const [offset, setOffset] = useState(0);
   const { skills: userSkills } = useUserSkills();
 
-  const { data: skillOptions } = useApi(() => api.get('/skills'), []);
-  const { data: locations } = useApi(() => api.get('/locations'), []);
+  const { data: skillOptions, error: skillOptionsError, reload: reloadSkillOptions } = useApi(() => api.get('/skills'), []);
+  const { data: locations, error: locationsError, reload: reloadLocations } = useApi(() => api.get('/locations'), []);
 
   const hasActiveFilters =
     debouncedQ || skillIds.length > 0 || experienceLevel || employmentType || remoteType || location;
@@ -113,7 +114,9 @@ export default function JobsPage() {
       {/* Filters */}
       <div className="card mb-5 p-4">
         <p className="label">Skills</p>
-        {!skillOptions || skillOptions.length === 0 ? (
+        {skillOptionsError ? (
+          <InlineError error={skillOptionsError} onRetry={reloadSkillOptions} label="Skill filters unavailable" />
+        ) : !skillOptions || skillOptions.length === 0 ? (
           <p className="text-xs text-slate-400">No skills available.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -170,6 +173,13 @@ export default function JobsPage() {
             options={(locations || []).map((l) => ({ value: l.city, label: `${l.city}${l.state ? `, ${l.state}` : ''}` }))}
           />
         </div>
+
+        <InlineError
+          className="mt-3"
+          error={locationsError}
+          onRetry={reloadLocations}
+          label="Location filter unavailable"
+        />
       </div>
 
       {/* Results */}

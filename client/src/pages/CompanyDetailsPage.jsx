@@ -6,6 +6,7 @@ import { CompanyAvatar } from '../components/JobCard.jsx';
 import JobCard from '../components/JobCard.jsx';
 import { Badge } from '../components/Badge.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import InlineError from '../components/InlineError.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { CardSkeleton, GridSkeleton } from '../components/Skeleton.jsx';
 
@@ -13,7 +14,7 @@ export default function CompanyDetailsPage() {
   const { id } = useParams();
   const { skills: userSkills } = useUserSkills();
   const { data: company, loading, error, reload } = useApi(() => api.get(`/companies/${id}`), [id]);
-  const { data: details } = useApi(() => api.get(`/companies/${id}/jobs`), [id]);
+  const { data: details, error: detailsError, reload: reloadDetails } = useApi(() => api.get(`/companies/${id}/jobs`), [id]);
 
   if (error) {
     return (
@@ -120,7 +121,9 @@ export default function CompanyDetailsPage() {
       {/* Open jobs */}
       <section>
         <h2 className="mb-4 section-title text-base">Open jobs at {company.name}</h2>
-        {!details ? (
+        {detailsError ? (
+          <InlineError error={detailsError} onRetry={reloadDetails} label="Could not load open jobs" />
+        ) : !details ? (
           <GridSkeleton cols={3} rows={2} />
         ) : jobs.length === 0 ? (
           <EmptyState title="No open jobs right now" description="Check back soon — or explore similar companies." icon="💼" />

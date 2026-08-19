@@ -15,10 +15,13 @@ api.interceptors.response.use(
   (res) => res.data,
   (err) => {
     const status = err.response?.status || 0;
-    const serverMessage = err.response?.data?.message;
-    const error = new Error(serverMessage || friendlyMessage(status, err.code));
+    const serverMessage = typeof err.response?.data?.message === 'string' ? err.response.data.message : '';
+    // Keep the axios error as `cause` so the original stack, request config and
+    // response body stay available for debugging.
+    const error = new Error(serverMessage || friendlyMessage(status, err.code), { cause: err });
     error.status = status;
     error.code = err.response?.data?.code || (status === 0 ? 'NETWORK' : 'API_ERROR');
+    error.url = err.config ? `${err.config.method?.toUpperCase()} ${err.config.url}` : undefined;
     throw error;
   },
 );

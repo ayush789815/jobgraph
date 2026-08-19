@@ -100,7 +100,12 @@ async function main() {
     logSection('Summary');
     await summarize(session);
   } finally {
-    await session.close();
+    // Never let a cleanup failure mask the real seeding error.
+    try {
+      await session.close();
+    } catch (err) {
+      console.warn(`  ⚠ Could not close the session cleanly: ${err.message}`);
+    }
     await closeDriver();
   }
 }
@@ -260,7 +265,11 @@ async function summarize(session) {
   console.log('\n✔ Seed complete. Start the API with "npm run dev" and open http://localhost:5173');
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('\n✖ Seed failed:', err.message);
+  if (err.code) console.error(`  code: ${err.code}`);
+  if (err.cause) console.error(`  caused by: ${err.cause.message}`);
+  if (err.stack) console.error(err.stack);
+  await closeDriver();
   process.exit(1);
 });

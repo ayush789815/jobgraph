@@ -4,6 +4,7 @@ import { useApi } from '../hooks/useApi.js';
 import { Badge } from '../components/Badge.jsx';
 import { CompanyAvatar } from '../components/JobCard.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import InlineError from '../components/InlineError.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { CardSkeleton } from '../components/Skeleton.jsx';
 import { formatSalary, timeAgo } from '../utils/format.js';
@@ -11,8 +12,11 @@ import { formatSalary, timeAgo } from '../utils/format.js';
 export default function SkillDetailsPage() {
   const { id } = useParams();
   const { data: skill, loading, error, reload } = useApi(() => api.get(`/skills/${id}`), [id]);
-  const { data: jobs } = useApi(() => api.get(`/skills/${id}/jobs`), [id]);
-  const { data: companies } = useApi(() => api.get(`/skills/${id}/companies`), [id]);
+  const { data: jobs, error: jobsError, reload: reloadJobs } = useApi(() => api.get(`/skills/${id}/jobs`), [id]);
+  const { data: companies, error: companiesError, reload: reloadCompanies } = useApi(
+    () => api.get(`/skills/${id}/companies`),
+    [id],
+  );
 
   if (error) {
     return (
@@ -73,7 +77,9 @@ export default function SkillDetailsPage() {
               Companies hiring for {skill.name}{' '}
               <span className="font-normal text-slate-400">— found by traversing Job → Skill → Company (2 hops)</span>
             </h2>
-            {!companies ? null : companies.length === 0 ? (
+            {companiesError ? (
+              <InlineError className="mt-4" error={companiesError} onRetry={reloadCompanies} label="Could not load companies" />
+            ) : !companies ? null : companies.length === 0 ? (
               <EmptyState title="No companies hiring yet" description="This skill is not required by any current job." icon="🏢" />
             ) : (
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -98,7 +104,9 @@ export default function SkillDetailsPage() {
           {/* Jobs requiring this skill */}
           <section className="card p-6">
             <h2 className="mb-4 section-title">Open jobs requiring {skill.name}</h2>
-            {!jobs ? null : jobs.length === 0 ? (
+            {jobsError ? (
+              <InlineError error={jobsError} onRetry={reloadJobs} label="Could not load open jobs" />
+            ) : !jobs ? null : jobs.length === 0 ? (
               <EmptyState title="No jobs require this skill yet" icon="💼" />
             ) : (
               <ul className="divide-y divide-slate-100">

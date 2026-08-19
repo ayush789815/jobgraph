@@ -8,6 +8,7 @@ import ConnectionGraph from '../components/graph/ConnectionGraph.jsx';
 import GraphLegend from '../components/graph/GraphLegend.jsx';
 import NodePanel from '../components/graph/NodePanel.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import InlineError from '../components/InlineError.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { cx } from '../utils/format.js';
 
@@ -32,7 +33,7 @@ export default function GraphExplorerPage() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [graphKey, setGraphKey] = useState(0);
 
-  const { data: list } = useApi(() => fetchList(type), [type]);
+  const { data: list, error: listError, reload: reloadList } = useApi(() => fetchList(type), [type]);
 
   // Auto-select the first item of the tab when nothing is chosen yet.
   useEffect(() => {
@@ -117,6 +118,12 @@ export default function GraphExplorerPage() {
           onChange={setPickerQuery}
           placeholder={`Pick a ${currentTab.label.toLowerCase()} to explore (${list?.length ?? 0} available)…`}
           autoFocus={false}
+        />
+        <InlineError
+          className="mt-2 max-w-xl"
+          error={listError}
+          onRetry={reloadList}
+          label={`Could not load ${currentTab.plural}`}
         />
         {pickerQuery && (
           <div className="card absolute z-30 mt-2 max-h-80 w-full max-w-xl overflow-y-auto p-1 nice-scroll">

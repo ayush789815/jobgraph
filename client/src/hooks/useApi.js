@@ -18,13 +18,23 @@ export function useApi(loader, deps = []) {
   useEffect(() => {
     let cancelled = false;
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    Promise.resolve(loaderRef.current())
-      .then((data) => {
-        if (!cancelled) setState({ data, loading: false, error: null });
-      })
-      .catch((error) => {
-        if (!cancelled) setState({ data: null, loading: false, error });
-      });
+    const fail = (error) => {
+      // Some callers only read `data`, so always log: a failed request must
+      // never disappear without a trace.
+      console.error('[useApi] request failed:', error);
+      if (!cancelled) setState({ data: null, loading: false, error });
+    };
+
+    try {
+      // A loader that throws synchronously must not take the effect down with it.
+      Promise.resolve(loaderRef.current())
+        .then((data) => {
+          if (!cancelled) setState({ data, loading: false, error: null });
+        })
+        .catch(fail);
+    } catch (error) {
+      fail(error instanceof Error ? error : new Error(String(error)));
+    }
     return () => {
       cancelled = true;
     };

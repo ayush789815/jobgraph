@@ -8,13 +8,14 @@ import SearchInput from '../components/SearchInput.jsx';
 import Chip from '../components/Chip.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import InlineError from '../components/InlineError.jsx';
 import { Badge } from '../components/Badge.jsx';
 import { GridSkeleton } from '../components/Skeleton.jsx';
 import { cx, formatSalary } from '../utils/format.js';
 
 export default function JobMatchPage() {
   const { skills, toggleSkill } = useUserSkills();
-  const { data: allSkills } = useApi(() => api.get('/skills'));
+  const { data: allSkills, error: skillsError, reload: reloadSkills } = useApi(() => api.get('/skills'));
   const [q, setQ] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -66,13 +67,15 @@ export default function JobMatchPage() {
 
         <SearchInput className="mt-4 max-w-sm" value={q} onChange={setQ} placeholder="Filter skills…" />
 
+        <InlineError className="mt-4" error={skillsError} onRetry={reloadSkills} label="Skill list unavailable" />
+
         <div className="mt-4 flex flex-wrap gap-2">
           {filteredSkills.map((s) => (
             <Chip key={s.id} active={skills.includes(s.id)} onClick={() => toggleSkill(s.id)} title={s.category}>
               {s.name}
             </Chip>
           ))}
-          {filteredSkills.length === 0 && <p className="text-sm text-slate-400">No skills match "{q}".</p>}
+          {!skillsError && filteredSkills.length === 0 && <p className="text-sm text-slate-400">No skills match "{q}".</p>}
         </div>
       </div>
 
