@@ -25,21 +25,37 @@ export function notFoundHandler(req, res) {
   res.status(404).json({ message: `Route ${req.method} ${req.originalUrl} not found`, code: 'NOT_FOUND' });
 }
 
-// eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, next) {
   const status = err.status || 500;
-  const code = err.code || 'INTERNAL_ERROR';
+  const code = typeof err.code === 'string' ? err.code : 'INTERNAL_ERROR';
   const expose = err.expose === true || status < 500;
 
-  if (status >= 500) {
+  if (status >= 500 && expose) {
+    // Expected infrastructure problem (CognoDB down/unconfigured): one line is
+    // enough, a stack trace would only add noise.
+    console.warn(`[warn] ${req.method} ${req.originalUrl} -> ${code}: ${err.message}`);
+  } else if (status >= 500) {
     // Log the real diagnostic server-side; never leak it to the client.
     console.error(`[error] ${req.method} ${req.originalUrl} -> ${err.message}`);
     if (err.stack) console.error(err.stack.split('\n').slice(0, 4).join('\n'));
+    if (err.cause) console.error(`[error] caused by: ${err.cause.code || err.cause.name}: ${err.cause.message}`);
   }
 
-  const message = expose
-    ? err.message
-    : 'Something went wrong on our side. Please try again in a moment.';
+  // Once a response has started streaming we can no longer rewrite it as JSON;
+  // hand the error back to Express instead of throwing inside this handler.
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Request body is not valid JSON.', code: 'INVALID_JSON' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ message: 'Request body is too large.', code: 'PAYLOAD_TOO_LARGE' });
+  }
+
+  const message =
+    (expose && err.message) || 'Something went wrong on our side. Please try again in a moment.';
 
   res.status(status).json({ message, code });
 }

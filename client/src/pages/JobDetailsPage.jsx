@@ -5,6 +5,7 @@ import { useUserSkills } from '../hooks/useUserSkills.js';
 import { Badge, TypeBadge } from '../components/Badge.jsx';
 import { CompanyAvatar, MatchBadge, computeMatch } from '../components/JobCard.jsx';
 import ErrorState from '../components/ErrorState.jsx';
+import InlineError from '../components/InlineError.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { CardSkeleton } from '../components/Skeleton.jsx';
 import { salaryWithCurrency, timeAgo } from '../utils/format.js';
@@ -23,7 +24,7 @@ export default function JobDetailsPage() {
   const { skills: userSkills } = useUserSkills();
 
   const { data: job, loading, error, reload } = useApi(() => api.get(`/jobs/${id}`), [id]);
-  const { data: related } = useApi(() => api.get(`/jobs/${id}/related`), [id]);
+  const { data: related, error: relatedError, reload: reloadRelated } = useApi(() => api.get(`/jobs/${id}/related`), [id]);
 
   if (error) {
     return (
@@ -103,7 +104,9 @@ export default function JobDetailsPage() {
           {/* Related jobs — the multi-hop payoff */}
           <div className="card p-6">
             <h2 className="section-title">Related jobs <span className="font-normal text-slate-400">— share the most skills with this job (2-hop)</span></h2>
-            {related && related.length === 0 ? (
+            {relatedError ? (
+              <InlineError className="mt-3" error={relatedError} onRetry={reloadRelated} label="Could not load related jobs" />
+            ) : related && related.length === 0 ? (
               <EmptyState title="No related jobs" description="This job has a unique skill combination." icon="🔗" />
             ) : (
               <ul className="mt-3 divide-y divide-slate-100">
