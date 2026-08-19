@@ -18,7 +18,7 @@ export const COMPANY_JOBS = `
 MATCH (c:Company {id: $id})<-[:POSTED_BY]-(j:Job)
 OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location)
 OPTIONAL MATCH (j)-[:REQUIRES]->(s:Skill)
-RETURN j, l, collect(DISTINCT s) AS skills
+RETURN j, c, l, collect(DISTINCT s) AS skills
 ORDER BY j.postedAt DESC
 LIMIT $limit
 `;

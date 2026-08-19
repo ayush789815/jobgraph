@@ -1,5 +1,6 @@
 import { NODE_TYPE_ORDER, NODE_TYPES } from '../../utils/nodeTypes.js';
 import { LINK_STYLES } from './LINK_STYLES.js';
+import { humanizeRelationship } from '../../utils/format.js';
 
 export default function GraphLegend() {
   return (
@@ -25,7 +26,7 @@ export default function GraphLegend() {
                   <line x1="0" y1="5" x2="21" y2="5" stroke={style.color} strokeWidth="2" />
                   <path d="M21,1 L26,5 L21,9 z" fill={style.color} />
                 </svg>
-                {rel.replace(/_/g, ' ').toLowerCase()} — {style.label}
+                {humanizeRelationship(rel)} — {style.label}
               </li>
             ))}
           </ul>

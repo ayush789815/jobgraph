@@ -1,5 +1,6 @@
 import { runQuery } from '../config/database.js';
 import { toPlain } from '../utils/neo4j.js';
+import { toCountedNode, toJobSummary, toLocation, toPlainList } from '../utils/mappers.js';
 import { ALL_LOCATIONS, NODE_COUNTS, POPULAR_SKILLS, POPULAR_TECHNOLOGIES, RECENT_JOBS } from '../queries/statsQueries.js';
 
 const DEFAULT_POPULAR_LIMIT = 8;
@@ -30,51 +31,19 @@ export async function getDashboardStats() {
 
   return {
     counts,
-    popularSkills: skillRecords.map((r) => ({
-      ...pick(r.get('s')),
-      jobCount: toPlain(r.get('jobCount')),
+    popularSkills: skillRecords.map((r) => toCountedNode(r, 's')),
+    popularTechnologies: techRecords.map((r) => toCountedNode(r, 't')),
+    recentJobs: recentRecords.map((r) => ({
+      ...toJobSummary(r.get('j'), r.get('c'), r.get('l')),
+      skills: toPlainList(r, 'skills'),
     })),
-    popularTechnologies: techRecords.map((r) => ({
-      ...pick(r.get('t')),
-      jobCount: toPlain(r.get('jobCount')),
-    })),
-    recentJobs: recentRecords.map((r) => {
-      const j = toPlain(r.get('j'));
-      const c = toPlain(r.get('c'));
-      const l = toPlain(r.get('l'));
-      return {
-        id: j.id,
-        title: j.title,
-        employmentType: j.employmentType,
-        experienceLevel: j.experienceLevel,
-        salaryMin: j.salaryMin,
-        salaryMax: j.salaryMax,
-        salaryCurrency: j.salaryCurrency,
-        remoteType: j.remoteType,
-        postedAt: j.postedAt,
-        companyName: c ? c.name : '',
-        location: l ? { id: l.id, city: l.city, state: l.state, country: l.country } : null,
-        skills: (r.get('skills') || []).map((n) => toPlain(n)),
-      };
-    }),
   };
 }
 
 export async function listLocations() {
   const records = await runQuery(ALL_LOCATIONS);
-  return records.map((r) => {
-    const l = toPlain(r.get('l'));
-    return {
-      id: l.id,
-      city: l.city,
-      state: l.state,
-      country: l.country,
-      jobCount: toPlain(r.get('jobCount')),
-    };
-  });
-}
-
-function pick(node) {
-  const n = toPlain(node);
-  return { id: n.id, name: n.name, category: n.category || '' };
+  return records.map((r) => ({
+    ...toLocation(r.get('l')),
+    jobCount: toPlain(r.get('jobCount')),
+  }));
 }

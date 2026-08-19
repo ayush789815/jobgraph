@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { NODE_TYPES } from '../../utils/nodeTypes.js';
-import { formatSalary, timeAgo } from '../../utils/format.js';
+import { formatSalary, humanizeRelationship, pluralize, timeAgo } from '../../utils/format.js';
 import { TypeBadge } from '../Badge.jsx';
 
 const PROP_LABELS = {
@@ -70,7 +70,7 @@ export default function NodePanel({ node, connections, nodes, onClose }) {
         {related.length > 0 && (
           <div className="mt-4">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-              {related.length} connection{related.length > 1 ? 's' : ''}
+              {pluralize(related.length, 'connection')}
             </p>
             <ul className="space-y-1.5">
               {related.map((l) => {
@@ -83,7 +83,7 @@ export default function NodePanel({ node, connections, nodes, onClose }) {
                     <span className="truncate text-xs text-slate-600">
                       <span className="font-semibold text-slate-800">{otherNode.name}</span>
                       <span className="mx-1 text-slate-400">·</span>
-                      {l.relationship.replace(/_/g, ' ').toLowerCase()}
+                      {humanizeRelationship(l.relationship)}
                     </span>
                   </li>
                 );

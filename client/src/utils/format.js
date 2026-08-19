@@ -38,6 +38,27 @@ export function cx(...parts) {
   return parts.filter(Boolean).join(' ');
 }
 
+/** "1 job" / "4 jobs" — count plus the correctly pluralized noun. */
+export function pluralize(count, noun, plural = `${noun}s`) {
+  return `${count} ${count === 1 ? noun : plural}`;
+}
+
+/**
+ * "Berlin, BE" from a location node. `include` picks the qualifier appended
+ * after the city ('state', 'country' or 'none'); `fallback` is used when the
+ * job has no location at all (i.e. it is remote).
+ */
+export function formatLocation(location, { fallback = '—', include = 'state' } = {}) {
+  if (!location || !location.city) return fallback;
+  const qualifier = include === 'none' ? null : location[include];
+  return qualifier ? `${location.city}, ${qualifier}` : location.city;
+}
+
+/** "USES_TECH" -> "uses tech" for graph relationship labels. */
+export function humanizeRelationship(relationship) {
+  return String(relationship || '').replace(/_/g, ' ').toLowerCase();
+}
+
 /** Salary range with currency prefix (e.g. "$110k – $150k"). */
 export function salaryWithCurrency(job) {
   const range = formatSalary(job);

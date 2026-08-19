@@ -1,19 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Badge } from './Badge.jsx';
-import { cx, formatSalary, initials, timeAgo } from '../utils/format.js';
-
-/** Computes a client-side match % between a job's skills and the user's skills. */
-export function computeMatch(job, userSkills) {
-  if (!userSkills || userSkills.length === 0) return null;
-  const required = job.skills || [];
-  if (required.length === 0) return null;
-  const matched = required.filter((s) => userSkills.includes(s.id)).length;
-  return Math.round((matched / required.length) * 100);
-}
+import { cx, formatLocation, formatSalary, initials, timeAgo } from '../utils/format.js';
+import { computeMatch, matchTone } from '../utils/match.js';
 
 export function MatchBadge({ percent, className }) {
   if (percent === null || percent === undefined) return null;
-  const tone = percent >= 75 ? 'emerald' : percent >= 50 ? 'amber' : 'slate';
+  const { tone } = matchTone(percent);
   return (
     <Badge tone={tone} className={className} title={`${percent}% of this job's required skills match your profile`}>
       {percent}% match
@@ -24,7 +16,7 @@ export function MatchBadge({ percent, className }) {
 export default function JobCard({ job, userSkills = [], showMatch = false }) {
   const match = showMatch ? computeMatch(job, userSkills) : null;
   const company = job.company || { name: job.companyName };
-  const location = job.location ? `${job.location.city}${job.location.state ? `, ${job.location.state}` : ''}` : 'Remote-friendly';
+  const location = formatLocation(job.location, { fallback: 'Remote-friendly' });
 
   return (
     <article className="card card-hover flex h-full flex-col p-5">

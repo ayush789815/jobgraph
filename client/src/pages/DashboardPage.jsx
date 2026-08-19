@@ -8,6 +8,7 @@ import ErrorState from '../components/ErrorState.jsx';
 import { Badge } from '../components/Badge.jsx';
 import { GridSkeleton, StatSkeleton } from '../components/Skeleton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import { pluralize } from '../utils/format.js';
 
 const STATS = [
   { key: 'jobs', label: 'Open jobs', icon: '💼', to: '/jobs', accent: 'bg-indigo-50 text-indigo-600' },
@@ -79,7 +80,7 @@ export default function DashboardPage() {
                               {skill.name}
                             </span>
                             <span className="text-xs font-medium tabular-nums text-slate-400">
-                              {skill.jobCount} job{skill.jobCount === 1 ? '' : 's'}
+                              {pluralize(skill.jobCount, 'job')}
                             </span>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-slate-100">
@@ -113,7 +114,7 @@ export default function DashboardPage() {
                             {t.name}
                           </span>
                           <span className="text-xs font-medium tabular-nums text-slate-400">
-                            {t.jobCount} job{t.jobCount === 1 ? '' : 's'}
+                            {pluralize(t.jobCount, 'job')}
                           </span>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-slate-100">
