@@ -1,13 +1,19 @@
 import express from 'express';
 import cors from 'cors';
-import { env } from './config/env.js';
+import { allowedOrigins, env } from './config/env.js';
 import apiRoutes from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { rateLimit, securityHeaders } from './middleware/security.js';
 
 const app = express();
 
 app.disable('x-powered-by');
-app.use(cors({ origin: env.clientOrigin === '*' ? true : env.clientOrigin.split(',').map((s) => s.trim()) }));
+app.set('trust proxy', 1);
+app.use(securityHeaders);
+
+const origins = allowedOrigins();
+app.use(cors({ origin: origins === null ? true : origins, methods: ['GET', 'POST'], maxAge: 600 }));
+app.use(rateLimit({ windowMs: 60_000, max: 120 }));
 app.use(express.json({ limit: '100kb' }));
 
 // Tiny request logger (method, path, status, duration).

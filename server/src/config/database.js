@@ -1,6 +1,11 @@
 import neo4j from 'neo4j-driver';
 import { env, hasDbCredentials } from './env.js';
 
+/** Message shown to clients when CognoDB is not usable. */
+const UNAVAILABLE_MESSAGE = env.isProduction
+  ? 'The graph database is temporarily unavailable. Please try again in a moment.'
+  : 'CognoDB is not configured yet. Add COGNODB_URI, COGNODB_USERNAME and COGNODB_PASSWORD to server/.env, then run "npm run seed".';
+
 let driver = null;
 
 /** Creates (once) the official Neo4j driver pointed at CognoDB. */
@@ -31,9 +36,7 @@ const QUERY_TIMEOUT_MS = 10000;
 export async function runQuery(cypher, params = {}) {
   const d = getDriver();
   if (!d) {
-    throw new DatabaseUnavailableError(
-      'CognoDB is not configured yet. Add COGNODB_URI, COGNODB_USERNAME and COGNODB_PASSWORD to server/.env, then run "npm run seed".',
-    );
+    throw new DatabaseUnavailableError(UNAVAILABLE_MESSAGE);
   }
   const session = d.session();
   try {
