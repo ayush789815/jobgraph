@@ -3,11 +3,12 @@ import api from '../services/api.js';
 import { useApi } from '../hooks/useApi.js';
 import { useUserSkills } from '../hooks/useUserSkills.js';
 import { Badge, TypeBadge } from '../components/Badge.jsx';
-import { CompanyAvatar, MatchBadge, computeMatch } from '../components/JobCard.jsx';
+import { CompanyAvatar, MatchBadge } from '../components/JobCard.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { CardSkeleton } from '../components/Skeleton.jsx';
-import { salaryWithCurrency, timeAgo } from '../utils/format.js';
+import { formatLocation, pluralize, salaryWithCurrency, timeAgo } from '../utils/format.js';
+import { computeMatch } from '../utils/match.js';
 
 function DetailRow({ label, value }) {
   return (
@@ -65,7 +66,7 @@ export default function JobDetailsPage() {
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">{job.title}</h1>
                 <p className="mt-1 text-sm text-slate-500">
                   <Link to={`/companies/${company?.id}`} className="link">{company?.name}</Link>
-                  {' · '}{job.location ? `${job.location.city}, ${job.location.country}` : 'Remote-friendly'}
+                  {' · '}{formatLocation(job.location, { fallback: 'Remote-friendly', include: 'country' })}
                 </p>
               </div>
               <MatchBadge percent={match} />
@@ -115,9 +116,9 @@ export default function JobDetailsPage() {
                       </Link>
                       <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                         <span>{r.companyName}</span>
-                        {r.location && <span>· {r.location.city}</span>}
+                        {r.location && <span>· {formatLocation(r.location, { include: 'none' })}</span>}
                         <span className="text-slate-300">·</span>
-                        <span className="font-medium text-emerald-600">{r.sharedSkills} shared skill{r.sharedSkills === 1 ? '' : 's'}</span>
+                        <span className="font-medium text-emerald-600">{pluralize(r.sharedSkills, 'shared skill')}</span>
                         <span className="hidden sm:inline text-slate-400">({r.sharedSkillNames?.slice(0, 3).join(', ')})</span>
                       </p>
                     </div>
@@ -156,7 +157,7 @@ export default function JobDetailsPage() {
               <DetailRow label="Experience" value={job.experienceLevel} />
               <DetailRow label="Employment" value={job.employmentType} />
               <DetailRow label="Work mode" value={job.remoteType} />
-              <DetailRow label="Location" value={job.location ? `${job.location.city}${job.location.state ? `, ${job.location.state}` : ''}` : '—'} />
+              <DetailRow label="Location" value={formatLocation(job.location)} />
               <DetailRow label="Country" value={job.location?.country || '—'} />
               <DetailRow label="Posted" value={timeAgo(job.postedAt)} />
             </div>

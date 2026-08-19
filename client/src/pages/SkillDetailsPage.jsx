@@ -6,7 +6,7 @@ import { CompanyAvatar } from '../components/JobCard.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { CardSkeleton } from '../components/Skeleton.jsx';
-import { formatSalary, timeAgo } from '../utils/format.js';
+import { formatLocation, formatSalary, pluralize, timeAgo } from '../utils/format.js';
 
 export default function SkillDetailsPage() {
   const { id } = useParams();
@@ -84,7 +84,7 @@ export default function SkillDetailsPage() {
                       <div className="min-w-0">
                         <p className="truncate font-bold text-slate-900">{c.name}</p>
                         <p className="mt-0.5 text-xs text-slate-500">
-                          {c.openJobs} open job{c.openJobs === 1 ? '' : 's'}
+                          {pluralize(c.openJobs, 'open job')}
                           {c.industry ? ` · ${c.industry.name}` : ''}
                         </p>
                       </div>
@@ -107,7 +107,7 @@ export default function SkillDetailsPage() {
                     <div className="min-w-0">
                       <Link to={`/jobs/${j.id}`} className="truncate font-semibold text-slate-800 hover:text-brand-700">{j.title}</Link>
                       <p className="mt-0.5 text-xs text-slate-500">
-                        {j.companyName}{j.location ? ` · ${j.location.city}` : ''} · {j.employmentType} · {timeAgo(j.postedAt)}
+                        {j.companyName}{j.location ? ` · ${formatLocation(j.location, { include: 'none' })}` : ''} · {j.employmentType} · {timeAgo(j.postedAt)}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

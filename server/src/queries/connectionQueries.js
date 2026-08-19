@@ -65,3 +65,12 @@ OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location)
 WITH c, i, collect(DISTINCT j) AS jobs
 RETURN c, i, jobs
 `;
+
+/** Second hop for companies: the skills, technologies and location of each open job. */
+export const COMPANY_JOB_FACETS = `
+MATCH (c:Company {id: $id})<-[:POSTED_BY]-(j:Job)
+OPTIONAL MATCH (j)-[:REQUIRES]->(s:Skill)
+OPTIONAL MATCH (j)-[:USES_TECH]->(t:Technology)
+OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location)
+RETURN j, s, t, l
+`;

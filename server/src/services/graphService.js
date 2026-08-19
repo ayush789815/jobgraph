@@ -1,13 +1,14 @@
 import { runQuery } from '../config/database.js';
 import { toPlain } from '../utils/neo4j.js';
 import {
+  COMPANY_JOB_FACETS,
   COMPANY_NEIGHBORHOOD,
   JOB_NEIGHBORHOOD,
   JOB_RELATED_JOBS,
   SKILL_JOBS_CONTEXT,
   SKILL_NEIGHBORHOOD,
 } from '../queries/connectionQueries.js';
-import { AppError } from '../middleware/errors.js';
+import { firstOrThrow } from '../utils/mappers.js';
 
 const DEFAULT_SECOND_HOP_LIMIT = 8;
 
@@ -23,10 +24,9 @@ export async function getJobConnections(id) {
     runQuery(JOB_NEIGHBORHOOD, { id }),
     runQuery(JOB_RELATED_JOBS, { id, limit: DEFAULT_SECOND_HOP_LIMIT }),
   ]);
-  if (egoRecords.length === 0) throw new AppError(`Job "${id}" was not found.`, 404, 'JOB_NOT_FOUND');
 
   const g = new GraphBuilder();
-  const r = egoRecords[0];
+  const r = firstOrThrow(egoRecords, 'Job', id);
   const job = toPlain(r.get('j'));
   g.addStart({ id: job.id, name: job.title, type: 'Job', props: job });
 
@@ -64,10 +64,9 @@ export async function getSkillConnections(id) {
     runQuery(SKILL_NEIGHBORHOOD, { id }),
     runQuery(SKILL_JOBS_CONTEXT, { id, limit: DEFAULT_SECOND_HOP_LIMIT }),
   ]);
-  if (egoRecords.length === 0) throw new AppError(`Skill "${id}" was not found.`, 404, 'SKILL_NOT_FOUND');
 
   const g = new GraphBuilder();
-  const r = egoRecords[0];
+  const r = firstOrThrow(egoRecords, 'Skill', id);
   const skill = toPlain(r.get('s'));
   g.addStart({ id: skill.id, name: skill.name, type: 'Skill', props: skill });
 
@@ -80,12 +79,7 @@ export async function getSkillConnections(id) {
     // Node first, then an explicit link in the seeded direction (Job -[:REQUIRES]-> Skill).
     const jobId = g.addNode({ id: j.id, name: j.title, type: 'Job', depth: 1, props: j }, null, null);
     g.addLink(jobId, g.startId, 'REQUIRES');
-    const c = toPlain(cr.get('c'));
-    if (c) g.addNode({ id: c.id, name: c.name, type: 'Company', depth: 2, props: c }, jobId, 'POSTED_BY');
-    const t = toPlain(cr.get('t'));
-    if (t) g.addNode({ id: t.id, name: t.name, type: 'Technology', depth: 2, props: t }, jobId, 'USES_TECH');
-    const l = toPlain(cr.get('l'));
-    if (l) g.addNode({ id: l.id, name: l.city, type: 'Location', depth: 2, props: l }, jobId, 'LOCATED_IN');
+    addJobFacets(g, cr, jobId, ['c', 't', 'l']);
   }
 
   return g.build({ focusName: skill.name });
@@ -93,10 +87,9 @@ export async function getSkillConnections(id) {
 
 export async function getCompanyConnections(id) {
   const records = await runQuery(COMPANY_NEIGHBORHOOD, { id });
-  if (records.length === 0) throw new AppError(`Company "${id}" was not found.`, 404, 'COMPANY_NOT_FOUND');
 
   const g = new GraphBuilder();
-  const r = records[0];
+  const r = firstOrThrow(records, 'Company', id);
   const company = toPlain(r.get('c'));
   g.addStart({ id: company.id, name: company.name, type: 'Company', props: company });
 
@@ -108,30 +101,36 @@ export async function getCompanyConnections(id) {
   }
 
   // Second hop: skills, technologies, and locations behind each open job.
-  const secondHop = await runQuery(
-    `
-    MATCH (c:Company {id: $id})<-[:POSTED_BY]-(j:Job)
-    OPTIONAL MATCH (j)-[:REQUIRES]->(s:Skill)
-    OPTIONAL MATCH (j)-[:USES_TECH]->(t:Technology)
-    OPTIONAL MATCH (j)-[:LOCATED_IN]->(l:Location)
-    RETURN j, s, t, l
-    `,
-    { id },
-  );
+  const secondHop = await runQuery(COMPANY_JOB_FACETS, { id });
   for (const hr of secondHop) {
-    const jobId = `Job:${toPlain(hr.get('j')).id}`;
-    const s = toPlain(hr.get('s'));
-    if (s) g.addNode({ id: s.id, name: s.name, type: 'Skill', depth: 2, props: s }, jobId, 'REQUIRES');
-    const t = toPlain(hr.get('t'));
-    if (t) g.addNode({ id: t.id, name: t.name, type: 'Technology', depth: 2, props: t }, jobId, 'USES_TECH');
-    const l = toPlain(hr.get('l'));
-    if (l) g.addNode({ id: l.id, name: l.city, type: 'Location', depth: 2, props: l }, jobId, 'LOCATED_IN');
+    addJobFacets(g, hr, `Job:${toPlain(hr.get('j')).id}`, ['s', 't', 'l']);
   }
 
   return g.build({ focusName: company.name });
 }
 
 /* ------------------------------------------------------------------ */
+
+/**
+ * How the optional columns around a Job map onto graph nodes: which node type
+ * they become, which property labels them, and the relationship to the job.
+ */
+const JOB_FACETS = {
+  s: { type: 'Skill', nameKey: 'name', relationship: 'REQUIRES' },
+  t: { type: 'Technology', nameKey: 'name', relationship: 'USES_TECH' },
+  l: { type: 'Location', nameKey: 'city', relationship: 'LOCATED_IN' },
+  c: { type: 'Company', nameKey: 'name', relationship: 'POSTED_BY' },
+};
+
+/** Hangs the second-hop context of a job (skills, tech, location, company) off `jobKey`. */
+function addJobFacets(g, record, jobKey, columns) {
+  for (const column of columns) {
+    const { type, nameKey, relationship } = JOB_FACETS[column];
+    const node = toPlain(record.get(column));
+    if (!node) continue;
+    g.addNode({ id: node.id, name: node[nameKey], type, depth: 2, props: node }, jobKey, relationship);
+  }
+}
 
 class GraphBuilder {
   constructor() {

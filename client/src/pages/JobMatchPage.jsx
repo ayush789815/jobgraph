@@ -10,7 +10,8 @@ import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import { Badge } from '../components/Badge.jsx';
 import { GridSkeleton } from '../components/Skeleton.jsx';
-import { cx, formatSalary } from '../utils/format.js';
+import { cx, formatSalary, pluralize } from '../utils/format.js';
+import { matchTone } from '../utils/match.js';
 
 export default function JobMatchPage() {
   const { skills, toggleSkill } = useUserSkills();
@@ -56,7 +57,7 @@ export default function JobMatchPage() {
           <div>
             <h2 className="section-title">Your skills</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              Picked {skills.length} skill{skills.length === 1 ? '' : 's'} — saved in your browser. Job cards show matches automatically.
+              Picked {pluralize(skills.length, 'skill')} — saved in your browser. Job cards show matches automatically.
             </p>
           </div>
           <button className="btn-primary" disabled={!hasSelection || loading} onClick={runMatch}>
@@ -106,6 +107,7 @@ export default function JobMatchPage() {
             {results.map((job) => {
               const matched = job.matchedSkillNames || [];
               const required = job.requiredSkills || [];
+              const tone = matchTone(job.matchPercentage);
               return (
                 <article key={job.id} className="card card-hover flex h-full flex-col p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -116,7 +118,7 @@ export default function JobMatchPage() {
                     <span
                       className={cx(
                         'shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums',
-                        job.matchPercentage >= 75 ? 'bg-emerald-100 text-emerald-700' : job.matchPercentage >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600',
+                        tone.badge,
                       )}
                     >
                       {job.matchPercentage}%
@@ -126,7 +128,7 @@ export default function JobMatchPage() {
                   <div className="mt-3">
                     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className={cx('h-full rounded-full', job.matchPercentage >= 75 ? 'bg-emerald-500' : job.matchPercentage >= 50 ? 'bg-amber-500' : 'bg-slate-400')}
+                        className={cx('h-full rounded-full', tone.bar)}
                         style={{ width: `${job.matchPercentage}%` }}
                       />
                     </div>

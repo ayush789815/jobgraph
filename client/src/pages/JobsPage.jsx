@@ -12,6 +12,7 @@ import JobCard from '../components/JobCard.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import { GridSkeleton } from '../components/Skeleton.jsx';
+import { formatLocation } from '../utils/format.js';
 
 const PAGE_SIZE = 30;
 
@@ -167,7 +168,7 @@ export default function JobsPage() {
             value={location}
             onChange={setLocation}
             placeholder="Any city"
-            options={(locations || []).map((l) => ({ value: l.city, label: `${l.city}${l.state ? `, ${l.state}` : ''}` }))}
+            options={(locations || []).map((l) => ({ value: l.city, label: formatLocation(l) }))}
           />
         </div>
       </div>

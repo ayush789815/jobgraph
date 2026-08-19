@@ -8,6 +8,7 @@ import { Badge } from '../components/Badge.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { CardSkeleton, GridSkeleton } from '../components/Skeleton.jsx';
+import { formatLocation, pluralize } from '../utils/format.js';
 
 export default function CompanyDetailsPage() {
   const { id } = useParams();
@@ -80,8 +81,8 @@ export default function CompanyDetailsPage() {
             <ul className="space-y-2">
               {locations.map((l) => (
                 <li key={l.id} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">{l.city}{l.state ? `, ${l.state}` : ''} · {l.country}</span>
-                  <Badge tone="sky">{l.jobCount} job{l.jobCount === 1 ? '' : 's'}</Badge>
+                  <span className="text-slate-600">{formatLocation(l)} · {l.country}</span>
+                  <Badge tone="sky">{pluralize(l.jobCount, 'job')}</Badge>
                 </li>
               ))}
             </ul>

@@ -7,6 +7,7 @@ import { Badge } from '../components/Badge.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import { CardSkeleton } from '../components/Skeleton.jsx';
+import { pluralize } from '../utils/format.js';
 
 export default function CompaniesPage() {
   const { data: companies, loading, error, reload } = useApi(() => api.get('/companies'));
@@ -42,7 +43,7 @@ export default function CompaniesPage() {
               </div>
               <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-500">{company.description}</p>
               <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-                <span className="font-bold text-brand-600">{company.jobCount} open job{company.jobCount === 1 ? '' : 's'}</span>
+                <span className="font-bold text-brand-600">{pluralize(company.jobCount, 'open job')}</span>
                 <span className="link">View company →</span>
               </div>
             </Link>
